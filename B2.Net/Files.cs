@@ -144,7 +144,7 @@ public class Files : IFiles {
 		// Get the upload url for this file
 		HttpRequestMessage uploadUrlRequest = FileUploadRequestGenerators.GetUploadUrl(_options, operationalBucketId);
 		HttpResponseMessage uploadUrlResponse = await _client.SendAsync(uploadUrlRequest, cancelToken);
-		string uploadUrlData = await uploadUrlResponse.Content.ReadAsStringAsync(cancelToken);
+		string uploadUrlData = await uploadUrlResponse.Content.ReadAsStringAsync();
 		B2UploadUrl uploadUrlObject = JsonConvert.DeserializeObject<B2UploadUrl>(uploadUrlData)!;
 		// Set the upload auth token
 		_options.UploadAuthorizationToken = uploadUrlObject.AuthorizationToken;
@@ -206,7 +206,7 @@ public class Files : IFiles {
 		HttpResponseMessage response = await _client.SendAsync(requestMessage, cancelToken);
 		// Auto retry
 		if (autoRetry && response.StatusCode is (HttpStatusCode)429 or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable) {
-			await Task.Delay(1000, cancelToken).WaitAsync(cancelToken);
+			Task.Delay(1000, cancelToken).Wait(cancelToken);
 			HttpRequestMessage retryMessage = FileUploadRequestGenerators.Upload(_options, uploadUrl.UploadUrl, fileData, fileName, fileInfo, contentType);
 			response = await _client.SendAsync(retryMessage, cancelToken);
 		}
@@ -454,7 +454,7 @@ public class Files : IFiles {
 		if (fileInfoHeaders.Any()) {
 			foreach (KeyValuePair<string, IEnumerable<string>> fileInfo in fileInfoHeaders) {
 				// Substring to parse out the file info prefix.
-				infoData.Add(fileInfo.Key[10..], fileInfo.Value.First());
+				infoData.Add(fileInfo.Key.Substring(10), fileInfo.Value.First());
 			}
 		}
 

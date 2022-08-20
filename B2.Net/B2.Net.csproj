@@ -23,9 +23,9 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>B2 Backblaze Cloud Storage</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>default</LangVersion>
     <RootNamespace>B2</RootNamespace>
+    <TargetFrameworks>net48;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

@@ -19,7 +19,7 @@ public class FileTests : BaseTest {
 	[OneTimeSetUp]
 	public void Setup() {
 		client = new B2Client(Options);
-		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "")[..6]}";
+		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "").Substring(0, 6)}";
 
 		List<B2Bucket> buckets = client.Buckets.GetList().Result;
 		B2Bucket existingBucket = null;
@@ -367,7 +367,7 @@ public class FileTests : BaseTest {
 	[Test]
 	public async Task CopyFile() {
 		const string fileName = "B2Test.txt";
-		byte[] fileData = await File.ReadAllBytesAsync(Path.Combine(FilePath, fileName));
+		byte[] fileData = File.ReadAllBytes(Path.Combine(FilePath, fileName));
 		B2File file = client.Files.Upload(fileData, fileName, testBucket.BucketId).Result;
 		// Clean up.
 		filesToDelete.Add(file);
@@ -385,7 +385,7 @@ public class FileTests : BaseTest {
 	[Test]
 	public async Task ReplaceFile() {
 		const string fileName = "B2Test.txt";
-		byte[] fileData = await File.ReadAllBytesAsync(Path.Combine(FilePath, fileName));
+		byte[] fileData = File.ReadAllBytes(Path.Combine(FilePath, fileName));
 		B2File file = client.Files.Upload(fileData, fileName, testBucket.BucketId).Result;
 		// Clean up.
 		filesToDelete.Add(file);

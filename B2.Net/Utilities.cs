@@ -20,7 +20,7 @@ public static class Utilities {
 	public static async Task CheckForErrors(HttpResponseMessage response, string callingApi = null) {
 		if (!response.IsSuccessStatusCode) {
 			// Should retry
-			bool retry = response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable;
+			bool retry = response.StatusCode is  (HttpStatusCode)429 or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable;
 			string content = await response.Content.ReadAsStringAsync();
 
 			B2Error b2Error;

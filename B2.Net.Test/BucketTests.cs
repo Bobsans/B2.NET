@@ -10,7 +10,7 @@ namespace B2.Test;
 
 public class BucketTests : BaseTest {
 	B2Client client;
-	readonly string bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "")[..6]}";
+	readonly string bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "").Substring(0, 6)}";
 
 	[OneTimeSetUp]
 	public void Setup() {
