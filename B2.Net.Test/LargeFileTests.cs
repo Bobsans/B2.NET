@@ -27,7 +27,7 @@ public class LargeFileTests : BaseTest {
 			existingBucket = b2Bucket;
 		}
 
-		testBucket = existingBucket ?? client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		testBucket = existingBucket ?? client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 	}
 
 	// THIS TEST DOES NOT PROPERLY CLEAN UP after an exception.

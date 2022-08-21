@@ -27,7 +27,7 @@ public class PublicFileTests : BaseTest {
 			existingBucket = b2Bucket;
 		}
 
-		testBucket = existingBucket ?? client.Buckets.Create(BUCKET_NAME, BucketTypes.allPublic).Result;
+		testBucket = existingBucket ?? client.Buckets.Create(BUCKET_NAME, BucketType.allPublic).Result;
 	}
 
 	[Test]

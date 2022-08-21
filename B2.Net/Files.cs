@@ -119,13 +119,7 @@ public class Files : IFiles {
 		HttpRequestMessage uploadUrlRequest = FileUploadRequestGenerators.GetUploadUrl(_options, operationalBucketId);
 		HttpResponseMessage uploadUrlResponse = await _client.SendAsync(uploadUrlRequest, cancelToken);
 
-		// parse response and return it.
-		B2UploadUrl uploadUrl = await ResponseParser.ParseResponse<B2UploadUrl>(uploadUrlResponse);
-
-		// Set the upload auth token
-		_options.UploadAuthorizationToken = uploadUrl.AuthorizationToken;
-
-		return uploadUrl;
+		return await ResponseParser.ParseResponse<B2UploadUrl>(uploadUrlResponse);
 	}
 
 	/// <summary>
@@ -138,19 +132,17 @@ public class Files : IFiles {
 	/// <param name="fileInfo"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> Upload(byte[] fileData, string fileName, string bucketId = "", Dictionary<string, string> fileInfo = null, CancellationToken cancelToken = default) {
+	public async Task<B2File> Upload(byte[] fileData, string fileName, string bucketId = "", Dictionary<string, string>? fileInfo = null, CancellationToken cancelToken = default) {
 		string operationalBucketId = Utilities.DetermineBucketId(_options, bucketId);
 
 		// Get the upload url for this file
 		HttpRequestMessage uploadUrlRequest = FileUploadRequestGenerators.GetUploadUrl(_options, operationalBucketId);
 		HttpResponseMessage uploadUrlResponse = await _client.SendAsync(uploadUrlRequest, cancelToken);
-		string uploadUrlData = await uploadUrlResponse.Content.ReadAsStringAsync();
+		string uploadUrlData = await uploadUrlResponse.Content.ReadAsStringAsync(cancelToken);
 		B2UploadUrl uploadUrlObject = JsonConvert.DeserializeObject<B2UploadUrl>(uploadUrlData)!;
-		// Set the upload auth token
-		_options.UploadAuthorizationToken = uploadUrlObject.AuthorizationToken;
 
 		// Now we can upload the file
-		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(_options, uploadUrlObject.UploadUrl, fileData, fileName, fileInfo);
+		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(uploadUrlObject, fileData, fileName, fileInfo);
 		HttpResponseMessage response = await _client.SendAsync(requestMessage, cancelToken);
 
 		return await ResponseParser.ParseResponse<B2File>(response, API);
@@ -166,7 +158,7 @@ public class Files : IFiles {
 	/// <param name="fileInfo"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, string bucketId = "", Dictionary<string, string> fileInfo = null, CancellationToken cancelToken = default) {
+	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, string bucketId = "", Dictionary<string, string>? fileInfo = null, CancellationToken cancelToken = default) {
 		return await Upload(fileData, fileName, uploadUrl, "", false, bucketId, fileInfo, cancelToken);
 	}
 
@@ -182,7 +174,7 @@ public class Files : IFiles {
 	/// <param name="fileInfo"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, bool autoRetry, string bucketId = "", Dictionary<string, string> fileInfo = null, CancellationToken cancelToken = default) {
+	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, bool autoRetry, string bucketId = "", Dictionary<string, string>? fileInfo = null, CancellationToken cancelToken = default) {
 		return await Upload(fileData, fileName, uploadUrl, "", autoRetry, bucketId, fileInfo, cancelToken);
 	}
 
@@ -199,15 +191,15 @@ public class Files : IFiles {
 	/// <param name="fileInfo"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, string contentType, bool autoRetry, string bucketId = "", Dictionary<string, string> fileInfo = null, CancellationToken cancelToken = default) {
+	public async Task<B2File> Upload(byte[] fileData, string fileName, B2UploadUrl uploadUrl, string contentType, bool autoRetry, string? bucketId = null, Dictionary<string, string>? fileInfo = null, CancellationToken cancelToken = default) {
 		// Now we can upload the file
-		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(_options, uploadUrl.UploadUrl, fileData, fileName, fileInfo, contentType);
+		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(uploadUrl, fileData, fileName, fileInfo, contentType);
 
 		HttpResponseMessage response = await _client.SendAsync(requestMessage, cancelToken);
 		// Auto retry
-		if (autoRetry && response.StatusCode is (HttpStatusCode)429 or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable) {
-			Task.Delay(1000, cancelToken).Wait(cancelToken);
-			HttpRequestMessage retryMessage = FileUploadRequestGenerators.Upload(_options, uploadUrl.UploadUrl, fileData, fileName, fileInfo, contentType);
+		if (autoRetry && response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable) {
+			await Task.Delay(1000, cancelToken).WaitAsync(cancelToken);
+			HttpRequestMessage retryMessage = FileUploadRequestGenerators.Upload(uploadUrl, fileData, fileName, fileInfo, contentType);
 			response = await _client.SendAsync(retryMessage, cancelToken);
 		}
 
@@ -228,18 +220,15 @@ public class Files : IFiles {
 	/// <param name="dontSha"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> Upload(Stream fileDataWithSha, string fileName, B2UploadUrl uploadUrl, string contentType, bool autoRetry, string bucketId = "", Dictionary<string, string> fileInfo = null, bool dontSha = false, CancellationToken cancelToken = default) {
+	public async Task<B2File> Upload(Stream fileDataWithSha, string fileName, B2UploadUrl uploadUrl, string contentType, bool autoRetry, string bucketId = "", Dictionary<string, string>? fileInfo = null, bool dontSha = false, CancellationToken cancelToken = default) {
 		// Now we can upload the file
-		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(_options, uploadUrl.UploadUrl, fileDataWithSha, fileName, fileInfo, contentType, dontSha);
+		HttpRequestMessage requestMessage = FileUploadRequestGenerators.Upload(uploadUrl, fileDataWithSha, fileName, fileInfo, contentType, dontSha);
 
 		HttpResponseMessage response = await _client.SendAsync(requestMessage, cancelToken);
 		// Auto retry
-		if (autoRetry && (
-			    response.StatusCode == (HttpStatusCode)429 ||
-			    response.StatusCode == HttpStatusCode.RequestTimeout ||
-			    response.StatusCode == HttpStatusCode.ServiceUnavailable)) {
-			Task.Delay(1000, cancelToken).Wait(cancelToken);
-			HttpRequestMessage retryMessage = FileUploadRequestGenerators.Upload(_options, uploadUrl.UploadUrl, fileDataWithSha, fileName, fileInfo, contentType, dontSha);
+		if (autoRetry && response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable) {
+			await Task.Delay(1000, cancelToken).WaitAsync(cancelToken);
+			HttpRequestMessage retryMessage = FileUploadRequestGenerators.Upload(uploadUrl, fileDataWithSha, fileName, fileInfo, contentType, dontSha);
 			response = await _client.SendAsync(retryMessage, cancelToken);
 		}
 
@@ -387,7 +376,7 @@ public class Files : IFiles {
 		string newFileName,
 		B2MetadataDirective metadataDirective = B2MetadataDirective.COPY,
 		string contentType = "",
-		Dictionary<string, string> fileInfo = null,
+		Dictionary<string, string>? fileInfo = null,
 		string range = "",
 		string destinationBucketId = "",
 		CancellationToken cancelToken = default
@@ -434,7 +423,7 @@ public class Files : IFiles {
 		await Utilities.CheckForErrors(response, API);
 
 		B2File file = new();
-		if (response.Headers.TryGetValues("X-Bz-Content-Sha1", out IEnumerable<string> values)) {
+		if (response.Headers.TryGetValues("X-Bz-Content-Sha1", out IEnumerable<string>? values)) {
 			file.ContentSHA1 = values.First();
 		}
 

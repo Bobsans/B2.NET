@@ -35,7 +35,7 @@ public class Buckets : IBuckets {
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
 	public async Task<B2Bucket> Create(
-		string bucketName, BucketTypes bucketType,
+		string bucketName, BucketType bucketType,
 		CancellationToken cancelToken = default
 	) {
 		HttpRequestMessage requestMessage = BucketRequestGenerators.CreateBucket(_options, bucketName, bucketType.ToString());
@@ -81,7 +81,7 @@ public class Buckets : IBuckets {
 	/// <param name="bucketId"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2Bucket> Update(BucketTypes bucketType, string bucketId = "", CancellationToken cancelToken = default) {
+	public async Task<B2Bucket> Update(BucketType bucketType, string bucketId = "", CancellationToken cancelToken = default) {
 		string operationalBucketId = Utilities.DetermineBucketId(_options, bucketId);
 		HttpRequestMessage requestMessage = BucketRequestGenerators.UpdateBucket(_options, operationalBucketId, bucketType.ToString());
 		HttpResponseMessage response = await _client.SendAsync(requestMessage, cancelToken);

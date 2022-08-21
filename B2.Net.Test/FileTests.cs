@@ -27,7 +27,7 @@ public class FileTests : BaseTest {
 			existingBucket = b2Bucket;
 		}
 
-		testBucket = existingBucket ?? client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		testBucket = existingBucket ?? client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 	}
 
 	[Test]
@@ -421,7 +421,7 @@ public class FileTests : BaseTest {
 		const string fileName = "B2Test.txt";
 		byte[] fileData = File.ReadAllBytes(Path.Combine(FilePath, fileName));
 		B2File file = client.Files.Upload(fileData, fileName, testBucket.BucketId).Result;
-		
+
 		// Clean up.
 		filesToDelete.Add(file);
 

@@ -1,11 +1,11 @@
-﻿namespace B2.Models; 
+﻿namespace B2.Models;
 
 public class B2Capabilities {
 	public B2Capabilities(B2AuthCapabilities authCapabilities) {
-		BucketId = authCapabilities.bucketId;
-		BucketName = authCapabilities.bucketName;
-		Capabilities = authCapabilities.capabilities;
-		NamePrefix = authCapabilities.namePrefix;
+		BucketId = authCapabilities.BucketId;
+		BucketName = authCapabilities.BucketName;
+		Capabilities = authCapabilities.Capabilities;
+		NamePrefix = authCapabilities.NamePrefix;
 	}
 
 	public string BucketName { get; }

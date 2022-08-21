@@ -19,7 +19,7 @@ public class BucketTests : BaseTest {
 
 	[Test]
 	public void GetBucketListTest() {
-		B2Bucket bucket = client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		B2Bucket bucket = client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 
 		List<B2Bucket> list = client.Buckets.GetList().Result;
 
@@ -30,7 +30,7 @@ public class BucketTests : BaseTest {
 
 	[Test]
 	public void CreateBucketTest() {
-		B2Bucket bucket = client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		B2Bucket bucket = client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 
 		// Clean up
 		if (!string.IsNullOrEmpty(bucket.BucketId)) {
@@ -45,7 +45,7 @@ public class BucketTests : BaseTest {
 		const string name = "B2net-testing-bucket-%$";
 
 		Assert.Throws<AggregateException>(() => {
-			_ = client.Buckets.Create(name, BucketTypes.allPrivate).Result;
+			_ = client.Buckets.Create(name, BucketType.allPrivate).Result;
 		});
 	}
 
@@ -176,7 +176,7 @@ public class BucketTests : BaseTest {
 	[Test]
 	public void DeleteBucketTest() {
 		//Creat a bucket to delete
-		B2Bucket bucket = client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		B2Bucket bucket = client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 
 		if (!string.IsNullOrEmpty(bucket.BucketId)) {
 			B2Bucket deletedBucket = client.Buckets.Delete(bucket.BucketId).Result;
@@ -189,12 +189,12 @@ public class BucketTests : BaseTest {
 	[Test]
 	public void UpdateBucketTest() {
 		//Creat a bucket to delete
-		B2Bucket bucket = client.Buckets.Create(bucketName, BucketTypes.allPrivate).Result;
+		B2Bucket bucket = client.Buckets.Create(bucketName, BucketType.allPrivate).Result;
 
 		try {
 			if (!string.IsNullOrEmpty(bucket.BucketId)) {
-				B2Bucket updatedBucket = client.Buckets.Update(BucketTypes.allPublic, bucket.BucketId).Result;
-				Assert.That(updatedBucket.BucketType, Is.EqualTo(BucketTypes.allPublic.ToString()));
+				B2Bucket updatedBucket = client.Buckets.Update(BucketType.allPublic, bucket.BucketId).Result;
+				Assert.That(updatedBucket.BucketType, Is.EqualTo(BucketType.allPublic.ToString()));
 			} else {
 				Assert.Fail("The bucket was not deleted. The response did not contain a bucketId.");
 			}

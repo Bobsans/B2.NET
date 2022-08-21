@@ -17,7 +17,7 @@ public class BucketRestrictedTests : BaseTest {
 		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "").Substring(0, 6)}";
 
 		Assert.ThrowsAsync<B2Exception>(async () => {
-			await client.Buckets.Create(bucketName, BucketTypes.allPrivate);
+			await client.Buckets.Create(bucketName, BucketType.allPrivate);
 		}, "Unauthorized error when operating on Buckets. Are you sure the key you are using has access?");
 	}
 

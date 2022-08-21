@@ -17,7 +17,7 @@ public static class FileCopyRequestGenerators {
 		string fileName,
 		B2MetadataDirective metadataDirective,
 		string contentType = "",
-		Dictionary<string, string> fileInfo = null,
+		Dictionary<string, string>? fileInfo = null,
 		string range = "",
 		string destinationBucketId = ""
 	) {
@@ -26,7 +26,7 @@ public static class FileCopyRequestGenerators {
 			{ "fileName", fileName },
 			{ "metadataDirective", metadataDirective.ToString() },
 		};
-		
+
 		if (!string.IsNullOrWhiteSpace(range)) {
 			payload.Add("range", range);
 		}

@@ -3,14 +3,13 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using B2.Models;
 
-namespace B2.Http.RequestGenerators; 
+namespace B2.Http.RequestGenerators;
 
 public static class BaseRequestGenerator {
 	public static HttpRequestMessage PostRequest(string endpoint, string body, B2Options options) {
-		Uri uri = new(options.ApiUrl + "/b2api/" + Constants.Version + "/" + endpoint);
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Post,
-			RequestUri = uri,
+			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{endpoint}"),
 			Content = new StringContent(body)
 		};
 
@@ -20,10 +19,9 @@ public static class BaseRequestGenerator {
 	}
 
 	public static HttpRequestMessage PostRequestJson(string endpoint, string body, B2Options options) {
-		Uri uri = new(options.ApiUrl + "/b2api/" + Constants.Version + "/" + endpoint);
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Post,
-			RequestUri = uri,
+			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{endpoint}"),
 			Content = new StringContent(body)
 		};
 

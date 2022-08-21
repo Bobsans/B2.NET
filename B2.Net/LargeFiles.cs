@@ -28,7 +28,7 @@ public class LargeFiles : ILargeFiles {
 	/// <param name="fileInfo"></param>
 	/// <param name="cancelToken"></param>
 	/// <returns></returns>
-	public async Task<B2File> StartLargeFile(string fileName, string contentType = "", string bucketId = "", Dictionary<string, string> fileInfo = null, CancellationToken cancelToken = default) {
+	public async Task<B2File> StartLargeFile(string fileName, string contentType = "", string bucketId = "", Dictionary<string, string>? fileInfo = null, CancellationToken cancelToken = default) {
 		string operationalBucketId = Utilities.DetermineBucketId(_options, bucketId);
 
 		HttpRequestMessage request = LargeFileRequestGenerators.Start(_options, operationalBucketId, fileName, contentType, fileInfo);

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace B2.Http.RequestGenerators;
 
-public class LargeFileRequestGenerators {
+public static class LargeFileRequestGenerators {
 	static class Endpoints {
 		public const string START = "b2_start_large_file";
 		public const string GET_PART_URL = "b2_get_upload_part_url";
@@ -20,7 +20,7 @@ public class LargeFileRequestGenerators {
 		public const string COPY_PART = "b2_copy_part";
 	}
 
-	public static HttpRequestMessage Start(B2Options options, string bucketId, string fileName, string contentType = null, Dictionary<string, string> fileInfo = null) {
+	public static HttpRequestMessage Start(B2Options options, string bucketId, string fileName, string? contentType = null, Dictionary<string, string>? fileInfo = null) {
 		string content = $"{{\"bucketId\":\"{bucketId}\",\"fileName\":\"{fileName}\",\"contentType\":\"{(string.IsNullOrEmpty(contentType) ? "b2/x-auto" : contentType)}\"}}";
 
 		HttpRequestMessage request = new() {
@@ -33,8 +33,8 @@ public class LargeFileRequestGenerators {
 
 		// File Info headers
 		if (fileInfo is { Count: > 0 }) {
-			foreach (KeyValuePair<string, string> info in fileInfo.Take(10)) {
-				request.Headers.Add($"X-Bz-Info-{info.Key}", info.Value);
+			foreach ((string key, string value) in fileInfo.Take(10)) {
+				request.Headers.Add($"X-Bz-Info-{key}", value);
 			}
 		}
 
@@ -133,7 +133,7 @@ public class LargeFileRequestGenerators {
 		}
 
 		string content = JsonConvert.SerializeObject(payload);
-		
+
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Post,
 			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{Endpoints.COPY_PART}"),

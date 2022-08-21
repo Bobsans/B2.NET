@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>.NET library for Backblaze's B2 Cloud Storage</Description>
     <AssemblyTitle>B2.Net</AssemblyTitle>
     <AssemblyName>B2.Net</AssemblyName>
-    <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
+    <NetStandardImplicitPackageVersion>1.6.5</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -14,18 +14,23 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <Authors>Westropp Ventures</Authors>
-    <Version>0.7.4.1</Version>
+    <Version>0.7.4.5</Version>
 	
     <PackageId>B2.Net</PackageId>
-    <PackageVersion>0.7.4.1</PackageVersion>
-    <PackageProjectUrl>https://github.com/coryrwest/B2.NET</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/coryrwest/B2.NET</RepositoryUrl>
+    <PackageVersion>0.7.4.5</PackageVersion>
+    <PackageProjectUrl>https://github.com/Bobsans/B2.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Bobsans/B2.Net</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>B2 Backblaze Cloud Storage</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <LangVersion>default</LangVersion>
     <RootNamespace>B2</RootNamespace>
-    <TargetFrameworks>net48;net6.0</TargetFrameworks>
+    <Title>B2.Net</Title>
+    <Copyright>Bobsans</Copyright>
+    <AssemblyVersion>0.7.4.5</AssemblyVersion>
+    <FileVersion>0.7.4.5</FileVersion>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

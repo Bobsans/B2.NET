@@ -7,7 +7,7 @@ using B2.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace B2.Http.RequestGenerators; 
+namespace B2.Http.RequestGenerators;
 
 public static class BucketRequestGenerators {
 	static class Endpoints {
@@ -61,6 +61,7 @@ public static class BucketRequestGenerators {
 				if (rule.DaysFromHidingToDeleting < 1 || rule.DaysFromUploadingToHiding < 1) {
 					throw new Exception("The smallest number of days you can set in a lifecycle rule is 1.");
 				}
+
 				if (rule.DaysFromHidingToDeleting == null && rule.DaysFromUploadingToHiding == null) {
 					throw new Exception("You must set either DaysFromHidingToDeleting or DaysFromUploadingToHiding. Both cannot be null.");
 				}
@@ -86,6 +87,7 @@ public static class BucketRequestGenerators {
 				{ "Cache-Control", "max-age=" + bucketOptions.CacheControl }
 			};
 		}
+
 		if (hasLifecycleRules) {
 			body.lifecycleRules = bucketOptions.LifecycleRules;
 		}
@@ -127,6 +129,7 @@ public static class BucketRequestGenerators {
 				if (rule.DaysFromHidingToDeleting < 1 || rule.DaysFromUploadingToHiding < 1) {
 					throw new Exception("The smallest number of days you can set in a lifecycle rule is 1.");
 				}
+
 				if (rule.DaysFromHidingToDeleting == null && rule.DaysFromUploadingToHiding == null) {
 					throw new Exception("You must set either DaysFromHidingToDeleting or DaysFromUploadingToHiding. Both cannot be null.");
 				}
@@ -145,21 +148,25 @@ public static class BucketRequestGenerators {
 				{ "Cache-Control", "max-age=" + bucketOptions.CacheControl }
 			};
 		}
+
 		if (hasLifecycleRules) {
 			body.lifecycleRules = bucketOptions.LifecycleRules;
 		}
 
 		// Has cors rules
 		if (bucketOptions.CORSRules is { Count: > 0 }) {
-			if (bucketOptions.CORSRules.Any(x => x.AllowedOperations == null || x.AllowedOperations.Length == 0)) {
+			if (bucketOptions.CORSRules.Any(x => x.AllowedOperations.Length == 0)) {
 				throw new Exception("You must set allowedOperations on the bucket CORS rules.");
 			}
-			if (bucketOptions.CORSRules.Any(x => x.AllowedOrigins == null || x.AllowedOrigins.Length == 0)) {
+
+			if (bucketOptions.CORSRules.Any(x => x.AllowedOrigins.Length == 0)) {
 				throw new Exception("You must set allowedOrigins on the bucket CORS rules.");
 			}
+
 			if (bucketOptions.CORSRules.Any(x => string.IsNullOrEmpty(x.CorsRuleName))) {
 				throw new Exception("You must set corsRuleName on the bucket CORS rules.");
 			}
+
 			body.corsRules = bucketOptions.CORSRules;
 		}
 
@@ -179,20 +186,20 @@ public static class BucketRequestGenerators {
 }
 
 class B2BucketCreateModel {
-	public string accountId { get; set; }
-	public string bucketName { get; set; }
-	public string bucketType { get; set; }
-	public Dictionary<string, string> bucketInfo { get; set; }
-	public List<B2BucketLifecycleRule> lifecycleRules { get; set; }
-	public List<B2CorsRule> corsRules { get; set; }
+	public string accountId { get; set; } = null!;
+	public string bucketName { get; set; } = null!;
+	public string bucketType { get; set; } = null!;
+	public Dictionary<string, string> bucketInfo { get; set; } = null!;
+	public List<B2BucketLifecycleRule> lifecycleRules { get; set; } = null!;
+	public List<B2CorsRule> corsRules { get; set; } = null!;
 }
 
 class B2BucketUpdateModel {
-	public string accountId { get; set; }
-	public string bucketId { get; set; }
-	public string bucketType { get; set; }
-	public Dictionary<string, string> bucketInfo { get; set; }
-	public List<B2BucketLifecycleRule> lifecycleRules { get; set; }
-	public List<B2CorsRule> corsRules { get; set; }
+	public string accountId { get; set; } = null!;
+	public string bucketId { get; set; } = null!;
+	public string bucketType { get; set; } = null!;
+	public Dictionary<string, string> bucketInfo { get; set; } = null!;
+	public List<B2BucketLifecycleRule> lifecycleRules { get; set; } = null!;
+	public List<B2CorsRule> corsRules { get; set; } = null!;
 	public int? ifRevisionIs { get; set; }
 }
