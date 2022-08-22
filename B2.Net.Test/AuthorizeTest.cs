@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Text.Json;
 using B2.Models;
-using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace B2.Test;
 
@@ -17,7 +16,7 @@ public class AuthorizeTest : BaseTest {
 	[Test]
 	public void CanWeAuthorizeStatic() {
 		B2Options result = B2Client.Authorize(Options);
-		Console.WriteLine(JsonConvert.SerializeObject(result));
+		Console.WriteLine(JsonSerializer.Serialize(result));
 
 		Assert.That(string.IsNullOrEmpty(result.AuthorizationToken), Is.False);
 	}
@@ -25,7 +24,7 @@ public class AuthorizeTest : BaseTest {
 	[Test]
 	public void CanWeAuthorizeNonMasterKey() {
 		B2Options result = B2Client.Authorize(APPLICATION_KEY_ID, APPLICATION_KEY);
-		Console.WriteLine(JsonConvert.SerializeObject(result));
+		Console.WriteLine(JsonSerializer.Serialize(result));
 
 		Assert.That(string.IsNullOrEmpty(result.AuthorizationToken), Is.False);
 	}

@@ -1,33 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>B2.Test</RootNamespace>
+	</PropertyGroup>
 
-    <IsPackable>false</IsPackable>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
+		<PackageReference Include="NUnit" Version="3.13.3" />
+		<PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\B2.Net\B2.Net.csproj" />
+	</ItemGroup>
 
-    <LangVersion>default</LangVersion>
-
-    <RootNamespace>B2.Test</RootNamespace>
-
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
-    <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
-  </ItemGroup>
-  
-  
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>NETCORE;NETCOREAPP2_0</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\B2.Net\B2.Net.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="files\B2LargeFileTest.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="files\B2Test.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<None Remove="B2 Test File.txt" />
+		<None Remove="B2LargeFileTest.txt" />
+		<None Remove="B2Test.txt" />
+	</ItemGroup>
 
 </Project>

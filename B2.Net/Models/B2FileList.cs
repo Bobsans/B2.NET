@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace B2.Models;
+﻿namespace B2.Models;
 
 public class B2FileList {
 	public string NextFileName { get; set; } = null!;

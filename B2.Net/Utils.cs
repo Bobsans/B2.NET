@@ -1,15 +1,19 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 using B2.Models;
 
 namespace B2;
 
-public static class Utilities {
+public static class Utils {
+	static readonly JsonSerializerOptions _jsonOptions = new() {
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+	};
+
+
 	/// <summary>
 	/// Create the B2 Authorization header. Base64 encoded accountId:applicationKey.
 	/// </summary>
@@ -17,22 +21,17 @@ public static class Utilities {
 		return $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes(accountId + ":" + applicationKey))}";
 	}
 
-	public static T? DeserializeModel<T>(string json) where T : new() {
-		return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions {
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-		});
-	}
+	public static string Serialize<T>(T obj) => JsonSerializer.Serialize(obj, _jsonOptions);
+	public static T? Deserialize<T>(string json) where T : new() => JsonSerializer.Deserialize<T>(json, _jsonOptions);
 
 	public static async Task CheckForErrors(HttpResponseMessage response, string? callingApi = null) {
 		if (!response.IsSuccessStatusCode) {
-			// Should retry
-			bool retry = response.StatusCode is (HttpStatusCode)429 or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable;
 			string content = await response.Content.ReadAsStringAsync();
 
 			B2Error? b2Error;
 
 			try {
-				b2Error = DeserializeModel<B2Error>(content);
+				b2Error = Deserialize<B2Error>(content);
 			} catch (Exception ex) {
 				throw new Exception("Serialization of the response failed. See inner exception for response contents and serialization error.", ex);
 			}
@@ -46,7 +45,7 @@ public static class Utilities {
 				throw new B2Exception(b2Error.Message) {
 					Status = b2Error.Status,
 					Code = b2Error.Code,
-					ShouldRetryRequest = retry
+					ShouldRetryRequest = response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.RequestTimeout or HttpStatusCode.ServiceUnavailable
 				};
 			}
 		}
@@ -57,14 +56,14 @@ public static class Utilities {
 		return BitConverter.ToString(sha1.ComputeHash(fileData)).Replace("-", "").ToLowerInvariant();
 	}
 
-	public static string DetermineBucketId(B2Options options, string bucketId) {
+	public static string DetermineBucketId(B2Options options, string? bucketId) {
 		// Check for a persistant bucket
 		if (!options.PersistBucket && string.IsNullOrEmpty(bucketId)) {
 			throw new ArgumentNullException(nameof(bucketId), "You must either Persist a Bucket or provide a BucketId in the method call.");
 		}
 
 		// Are we persisting buckets? If so use the one from settings
-		return options.PersistBucket ? options.BucketId : bucketId;
+		return options.PersistBucket ? options.BucketId : bucketId!;
 	}
 
 	class B2Error {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace B2.Models;
+﻿namespace B2.Models;
 
 public class B2AuthResponse {
 	public string AccountId { get; set; } = null!;

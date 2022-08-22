@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using B2.Models;
-using NUnit.Framework;
 
 namespace B2.Test;
 
@@ -16,10 +16,14 @@ public class LargeFileTests : BaseTest {
 
 	static string FilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../");
 
+	const string LARGE_FILE_NAME = "B2LargeFileTest.txt";
+
+	static FileStream ReadLargeFile() => File.OpenRead(Path.Join("files", LARGE_FILE_NAME));
+
 	[OneTimeSetUp]
 	public void Setup() {
 		client = new B2Client(Options);
-		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "").Substring(0, 6)}";
+		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "")[..6]}";
 		List<B2Bucket> buckets = client.Buckets.GetList().Result;
 		B2Bucket existingBucket = null;
 
@@ -32,13 +36,13 @@ public class LargeFileTests : BaseTest {
 
 	// THIS TEST DOES NOT PROPERLY CLEAN UP after an exception.
 	[Test]
-	public async System.Threading.Tasks.Task LargeFileUploadTest() {
-		const string fileName = "B2LargeFileTest.txt";
-		FileStream fileStream = File.OpenRead(Path.Combine(FilePath, fileName));
+	public async Task LargeFileUploadTest() {
 		List<byte[]> parts = new();
+
+		await using FileStream fileStream = ReadLargeFile();
 		long fileSize = fileStream.Length;
 		long totalBytesParted = 0;
-		const long minPartSize = 1024 * 5 * 1024;
+		const long minPartSize = 1024 * 1024 * 5;
 
 		while (totalBytesParted < fileSize) {
 			long partSize = minPartSize;
@@ -58,14 +62,14 @@ public class LargeFileTests : BaseTest {
 		B2File start = null;
 		B2File finish;
 		try {
-			start = client.LargeFiles.StartLargeFile(fileName, "", testBucket.BucketId).Result;
+			start = client.LargeFiles.StartLargeFile(LARGE_FILE_NAME, bucketId: testBucket.BucketId).Result;
 
 			for (int i = 0; i < parts.Count; i++) {
 				B2UploadPartUrl uploadUrl = client.LargeFiles.GetUploadPartUrl(start.FileId).Result;
 				_ = client.LargeFiles.UploadPart(parts[i], i + 1, uploadUrl).Result;
 			}
 
-			finish = client.LargeFiles.FinishLargeFile(start.FileId, parts.Select(Utilities.GetSha1Hash).ToArray()).Result;
+			finish = client.LargeFiles.FinishLargeFile(start.FileId, parts.Select(Utils.GetSha1Hash).ToArray()).Result;
 		} catch (Exception e) {
 			if (start != null) {
 				await client.LargeFiles.CancelLargeFile(start.FileId);
@@ -78,29 +82,27 @@ public class LargeFileTests : BaseTest {
 		// Clean up.
 		filesToDelete.Add(start);
 
-
 		Assert.That(finish.FileId, Is.EqualTo(start.FileId), "File Ids did not match.");
 	}
 
 	[Test]
 	public void LargeFileUploadIncompleteGetPartsTest() {
-		const string fileName = "B2LargeFileTest.txt";
-		FileStream fileStream = File.OpenRead(Path.Combine(FilePath, fileName));
-		StreamReader stream = new(fileStream);
+		using FileStream fileStream = ReadLargeFile();
+		using StreamReader stream = new(fileStream);
 		List<byte[]> parts = new();
+		const int partSize = 1024 * 1024 * 5;
 
 		B2LargeFileParts listParts;
 
 		while (stream.Peek() >= 0) {
-			char[] c = new char[1024 * (5 * 1024)];
+			char[] c = new char[partSize];
 			stream.Read(c, 0, c.Length);
-
 			parts.Add(Encoding.UTF8.GetBytes(c));
 		}
 
 		B2File start = null;
 		try {
-			start = client.LargeFiles.StartLargeFile(fileName, "", testBucket.BucketId).Result;
+			start = client.LargeFiles.StartLargeFile(LARGE_FILE_NAME, bucketId: testBucket.BucketId).Result;
 
 			for (int i = 0; i < 2; i++) {
 				B2UploadPartUrl uploadUrl = client.LargeFiles.GetUploadPartUrl(start.FileId).Result;
@@ -122,15 +124,15 @@ public class LargeFileTests : BaseTest {
 
 	[Test]
 	public void LargeFileCancelTest() {
-		const string fileName = "B2LargeFileTest.txt";
-		FileStream fileStream = File.OpenRead(Path.Combine(FilePath, fileName));
-		StreamReader stream = new(fileStream);
+		using FileStream fileStream = ReadLargeFile();
+		using StreamReader stream = new(fileStream);
 		List<byte[]> parts = new();
+		const int partSize = 1024 * 1024 * 5;
 
 		B2CancelledFile cancelledFile;
 
 		while (stream.Peek() >= 0) {
-			char[] c = new char[1024 * 5 * 1024];
+			char[] c = new char[partSize];
 			stream.Read(c, 0, c.Length);
 
 			parts.Add(Encoding.UTF8.GetBytes(c));
@@ -138,7 +140,7 @@ public class LargeFileTests : BaseTest {
 
 		B2File start;
 		try {
-			start = client.LargeFiles.StartLargeFile(fileName, "", testBucket.BucketId).Result;
+			start = client.LargeFiles.StartLargeFile(LARGE_FILE_NAME, bucketId: testBucket.BucketId).Result;
 
 			for (int i = 0; i < 2; i++) {
 				B2UploadPartUrl uploadUrl = client.LargeFiles.GetUploadPartUrl(start.FileId).Result;
@@ -157,15 +159,15 @@ public class LargeFileTests : BaseTest {
 
 	[Test]
 	public void LargeFileIncompleteListTest() {
-		const string fileName = "B2LargeFileTest.txt";
-		FileStream fileStream = File.OpenRead(Path.Combine(FilePath, fileName));
-		StreamReader stream = new(fileStream);
+		using FileStream fileStream = ReadLargeFile();
+		using StreamReader stream = new(fileStream);
 		List<byte[]> parts = new();
+		const int partSize = 1024 * 1024 * 5;
 
 		B2IncompleteLargeFiles fileList;
 
 		while (stream.Peek() >= 0) {
-			char[] c = new char[1024 * (5 * 1024)];
+			char[] c = new char[partSize];
 			stream.Read(c, 0, c.Length);
 
 			parts.Add(Encoding.UTF8.GetBytes(c));
@@ -173,7 +175,7 @@ public class LargeFileTests : BaseTest {
 
 		B2File start = null;
 		try {
-			start = client.LargeFiles.StartLargeFile(fileName, "", testBucket.BucketId).Result;
+			start = client.LargeFiles.StartLargeFile(LARGE_FILE_NAME, bucketId: testBucket.BucketId).Result;
 
 			for (int i = 0; i < 2; i++) {
 				B2UploadPartUrl uploadUrl = client.LargeFiles.GetUploadPartUrl(start.FileId).Result;
@@ -195,9 +197,8 @@ public class LargeFileTests : BaseTest {
 	}
 
 	[Test]
-	public async System.Threading.Tasks.Task LargeFileCopyPartTest() {
-		const string fileName = "B2LargeFileTest.txt";
-		FileStream fileStream = File.OpenRead(Path.Combine(FilePath, fileName));
+	public async Task LargeFileCopyPartTest() {
+		await using FileStream fileStream = ReadLargeFile();
 		List<byte[]> parts = new();
 		long fileSize = fileStream.Length;
 		long totalBytesParted = 0;
@@ -218,21 +219,21 @@ public class LargeFileTests : BaseTest {
 			totalBytesParted += partSize;
 		}
 
-		string[] shaHashes = parts.Select(Utilities.GetSha1Hash).ToArray();
+		string[] shaHashes = parts.Select(Utils.GetSha1Hash).ToArray();
 
 		B2File start = null;
 		B2File finish;
 		List<B2UploadPart> uploadedParts = new();
 
 		try {
-			start = client.LargeFiles.StartLargeFile(fileName, "", testBucket.BucketId).Result;
+			start = await client.LargeFiles.StartLargeFile(LARGE_FILE_NAME, bucketId: testBucket.BucketId);
 
 			for (int i = 0; i < parts.Count; i++) {
-				B2UploadPartUrl uploadUrl = client.LargeFiles.GetUploadPartUrl(start.FileId).Result;
-				uploadedParts.Add(client.LargeFiles.UploadPart(parts[i], i + 1, uploadUrl).Result);
+				B2UploadPartUrl uploadUrl = await client.LargeFiles.GetUploadPartUrl(start.FileId);
+				uploadedParts.Add(await client.LargeFiles.UploadPart(parts[i], i + 1, uploadUrl));
 			}
 
-			finish = client.LargeFiles.FinishLargeFile(start.FileId, shaHashes).Result;
+			finish = await client.LargeFiles.FinishLargeFile(start.FileId, shaHashes);
 		} catch (Exception e) {
 			if (start != null) {
 				await client.LargeFiles.CancelLargeFile(start.FileId);
@@ -247,18 +248,18 @@ public class LargeFileTests : BaseTest {
 
 		// Now we can copy the parts
 		const string copyFileName = "B2LargeFileCopyTest.txt";
-		B2File startCopy = client.LargeFiles.StartLargeFile(copyFileName, "", testBucket.BucketId).Result;
+		B2File startCopy = client.LargeFiles.StartLargeFile(copyFileName, bucketId: testBucket.BucketId).Result;
 
 		try {
 			foreach (B2UploadPart unused in uploadedParts) {
-				await client.LargeFiles.CopyPart(finish.FileId, startCopy.FileId, 1, $"0-minPartSize.ToString()");
+				await client.LargeFiles.CopyPart(finish.FileId, startCopy.FileId, 1, $"bytes=0-{minPartSize}");
 			}
 
 			B2File finishedCopy = await client.LargeFiles.FinishLargeFile(startCopy.FileId, shaHashes);
 
 			filesToDelete.Add(startCopy);
 
-			Assert.That(finishedCopy.ContentLength, Is.EqualTo(fileSize.ToString()), "File sizes did not match.");
+			Assert.That(finishedCopy.ContentLength, Is.EqualTo(fileSize), "File sizes did not match.");
 		} catch (Exception e) {
 			await client.LargeFiles.CancelLargeFile(startCopy.FileId);
 			Console.WriteLine(e);

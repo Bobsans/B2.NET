@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace B2.Models;
+﻿namespace B2.Models;
 
 public class B2UploadPartUrl {
 	public string FileId { get; set; } = null!;
@@ -12,22 +10,22 @@ public class B2UploadPart {
 	public string FileId { get; set; } = null!;
 	public int PartNumber { get; set; }
 	public int Length => ContentLength;
-	public string SHA1 => ContentSHA1;
+	public string Sha1 => ContentSha1;
 	public int ContentLength { get; set; }
-	public string ContentSHA1 { get; set; } = null!;
+	public string ContentSha1 { get; set; } = null!;
 }
 
 public class B2LargeFileParts {
-	public int NextPartNumber { get; set; }
+	public int? NextPartNumber { get; set; }
 	public List<B2LargeFilePart> Parts { get; set; } = null!;
 }
 
 public class B2LargeFilePart {
 	public string FileId { get; set; } = null!;
 	public int PartNumber { get; set; }
-	public string ContentLength { get; set; } = null!;
+	public int ContentLength { get; set; }
 	public string ContentSha1 { get; set; } = null!;
-	public string UploadTimestamp { get; set; } = null!;
+	public double UploadTimestamp { get; set; }
 }
 
 public class B2CancelledFile {

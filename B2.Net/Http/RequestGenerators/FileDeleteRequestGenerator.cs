@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-using B2.Models;
-using Newtonsoft.Json;
+﻿using B2.Models;
 
 namespace B2.Http.RequestGenerators;
 
@@ -10,10 +8,9 @@ public static class FileDeleteRequestGenerator {
 	}
 
 	public static HttpRequestMessage Delete(B2Options options, string fileId, string fileName) {
-		return BaseRequestGenerator.PostRequest(
-			Endpoints.DELETE,
-			JsonConvert.SerializeObject(new { fileId, fileName }),
-			options
-		);
+		return BaseRequestGenerator.PostRequestJson(Endpoints.DELETE, new {
+			fileId,
+			fileName
+		}, options);
 	}
 }

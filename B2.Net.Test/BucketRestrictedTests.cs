@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using B2.Models;
-using NUnit.Framework;
 
 namespace B2.Test;
 
@@ -14,7 +13,7 @@ public class BucketRestrictedTests : BaseTest {
 			KeyId = RESTRICTED_APPLICATION_KEY_ID,
 			ApplicationKey = RESTRICTED_APPLICATION_KEY
 		}));
-		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "").Substring(0, 6)}";
+		bucketName = $"B2NETTestingBucket-{Path.GetRandomFileName().Replace(".", "")[..6]}";
 
 		Assert.ThrowsAsync<B2Exception>(async () => {
 			await client.Buckets.Create(bucketName, BucketType.allPrivate);

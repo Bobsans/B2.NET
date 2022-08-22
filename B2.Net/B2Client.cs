@@ -1,8 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net;
 using B2.Http;
 using B2.Http.RequestGenerators;
 using B2.Models;
@@ -46,9 +42,6 @@ public class B2Client : IB2Client {
 	/// Simple method for instantiating the B2Client. Does auth for you. See https://www.backblaze.com/b2/docs/application_keys.html for details on application keys.
 	/// This method defaults to not persisting a bucket. Manually build the options object if you wish to do that.
 	/// </summary>
-	/// <param name="keyId"></param>
-	/// <param name="applicationKey"></param>
-	/// <param name="requestTimeout"></param>
 	public B2Client(string keyId, string applicationKey, int requestTimeout = 100) {
 		options = new B2Options {
 			KeyId = keyId,
@@ -62,18 +55,7 @@ public class B2Client : IB2Client {
 		LargeFiles = new LargeFiles(options);
 		capabilities = options.Capabilities;
 	}
-
-	/// <summary>
-	/// Simple method for instantiating the B2Client. Does auth for you. See https://www.backblaze.com/b2/docs/application_keys.html for details on application keys.
-	/// This method defaults to not persisting a bucket. Manually build the options object if you wish to do that.
-	/// </summary>
-	/// <param name="accountId"></param>
-	/// <param name="applicationKey"></param>
-	/// <param name="keyId"></param>
-	/// <param name="requestTimeout"></param>
-	[Obsolete("Use B2Client(string keyId, string applicationKey, int requestTimeout = 100) instead as AccountId is no longer needed")]
-	public B2Client(string accountId, string applicationKey, string keyId, int requestTimeout = 100) : this(keyId, applicationKey, requestTimeout) {}
-
+	
 	public IBuckets Buckets { get; private set; } = null!;
 	public IFiles Files { get; private set; } = null!;
 	public ILargeFiles LargeFiles { get; private set; } = null!;
@@ -81,7 +63,6 @@ public class B2Client : IB2Client {
 	/// <summary>
 	/// Only call this method if you created a B2Client with authorizeOnInitialize = false. This method of using B2.NET is considered in Beta, as it has not been extensively tested.
 	/// </summary>
-	/// <returns></returns>
 	public void Initialize() {
 		options = Authorize(options);
 		Buckets = new Buckets(options);
@@ -109,8 +90,6 @@ public class B2Client : IB2Client {
 	/// <summary>
 	/// Requires that KeyId and ApplicationKey on the options object be set. If you are using an application key you must specify the accountId, the keyId, and the applicationKey.
 	/// </summary>
-	/// <param name="options"></param>
-	/// <returns></returns>
 	public static async Task<B2Options> AuthorizeAsync(B2Options options) {
 		// Return if already authenticated.
 		if (options.Authenticated) {
@@ -127,7 +106,7 @@ public class B2Client : IB2Client {
 		string jsonResponse = await response.Content.ReadAsStringAsync();
 
 		if (response.IsSuccessStatusCode) {
-			options.SetState(Utilities.DeserializeModel<B2AuthResponse>(jsonResponse)!);
+			options.SetState(Utils.Deserialize<B2AuthResponse>(jsonResponse)!);
 		} else if (response.StatusCode == HttpStatusCode.Unauthorized) {
 			// Return a better exception because of confusing Keys api.
 			throw new AuthorizationException("If you are using an Application key and not a Master key, make sure that you are supplying the Key ID and Key Value for that Application Key. Do not mix your Account ID with your Application Key.");
@@ -141,7 +120,5 @@ public class B2Client : IB2Client {
 	/// <summary>
 	/// Requires that KeyId and ApplicationKey on the options object be set. If you are using an application key you must specify the accountId, the keyId, and the applicationKey.
 	/// </summary>
-	/// <param name="options"></param>
-	/// <returns></returns>
 	public static B2Options Authorize(B2Options options) => AuthorizeAsync(options).Result;
 }

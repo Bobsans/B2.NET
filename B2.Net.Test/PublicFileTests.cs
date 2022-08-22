@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using B2.Models;
-using NUnit.Framework;
 
 namespace B2.Test;
 
@@ -34,12 +33,12 @@ public class PublicFileTests : BaseTest {
 	public void FileGetFriendlyUrlTest() {
 		const string fileName = "B2Test.txt";
 		byte[] fileData = File.ReadAllBytes(Path.Combine(FilePath, fileName));
-		string hash = Utilities.GetSha1Hash(fileData);
+		string hash = Utils.GetSha1Hash(fileData);
 		B2File file = client.Files.Upload(fileData, fileName, testBucket.BucketId).Result;
 		// Clean up.
 		filesToDelete.Add(file);
 
-		Assert.That(file.ContentSHA1, Is.EqualTo(hash), "File hashes did not match.");
+		Assert.That(file.ContentSha1, Is.EqualTo(hash), "File hashes did not match.");
 
 		// Get url
 		string friendlyUrl = client.Files.GetFriendlyDownloadUrl(fileName, testBucket.BucketName);
@@ -48,7 +47,7 @@ public class PublicFileTests : BaseTest {
 		HttpClient client2 = new();
 		HttpResponseMessage friendFile = client2.GetAsync(friendlyUrl).Result;
 		byte[] fileData2 = friendFile.Content.ReadAsByteArrayAsync().Result;
-		string downloadHash = Utilities.GetSha1Hash(fileData2);
+		string downloadHash = Utils.GetSha1Hash(fileData2);
 
 		Assert.That(downloadHash, Is.EqualTo(hash));
 	}

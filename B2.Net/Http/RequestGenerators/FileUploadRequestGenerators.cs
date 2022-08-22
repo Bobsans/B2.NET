@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using B2.Models;
-using Newtonsoft.Json;
 
 namespace B2.Http.RequestGenerators;
 
@@ -17,12 +11,6 @@ public static class FileUploadRequestGenerators {
 	/// <summary>
 	/// Upload a file to B2. This method will calculate the SHA1 checksum before sending any data.
 	/// </summary>
-	/// <param name="uploadUrl"></param>
-	/// <param name="fileData"></param>
-	/// <param name="fileName"></param>
-	/// <param name="fileInfo"></param>
-	/// <param name="contentType"></param>
-	/// <returns></returns>
 	public static HttpRequestMessage Upload(B2UploadUrl uploadUrl, byte[] fileData, string fileName, Dictionary<string, string>? fileInfo, string? contentType = null) {
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Post,
@@ -33,7 +21,7 @@ public static class FileUploadRequestGenerators {
 		// Add headers
 		request.Headers.TryAddWithoutValidation("Authorization", uploadUrl.AuthorizationToken);
 		request.Headers.Add("X-Bz-File-Name", fileName.B2UrlEncode());
-		request.Headers.Add("X-Bz-Content-Sha1", Utilities.GetSha1Hash(fileData));
+		request.Headers.Add("X-Bz-Content-Sha1", Utils.GetSha1Hash(fileData));
 
 		// File Info headers
 		if (fileInfo is { Count: > 0 }) {
@@ -51,13 +39,6 @@ public static class FileUploadRequestGenerators {
 	/// <summary>
 	/// Upload a file to B2 using a stream. NOTE: You MUST provide the SHA1 at the end of your stream. This method will NOT do it for you.
 	/// </summary>
-	/// <param name="uploadUrl"></param>
-	/// <param name="fileDataWithSha"></param>
-	/// <param name="fileName"></param>
-	/// <param name="fileInfo"></param>
-	/// <param name="contentType"></param>
-	/// <param name="dontSha"></param>
-	/// <returns></returns>
 	public static HttpRequestMessage Upload(B2UploadUrl uploadUrl, Stream fileDataWithSha, string fileName, Dictionary<string, string>? fileInfo, string? contentType = null, bool dontSha = false) {
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Post,
@@ -86,10 +67,6 @@ public static class FileUploadRequestGenerators {
 	}
 
 	public static HttpRequestMessage GetUploadUrl(B2Options options, string bucketId) {
-		return BaseRequestGenerator.PostRequestJson(
-			Endpoints.GET_UPLOAD_URL,
-			JsonConvert.SerializeObject(new { bucketId }),
-			options
-		);
+		return BaseRequestGenerator.PostRequestJson(Endpoints.GET_UPLOAD_URL, new { bucketId }, options);
 	}
 }

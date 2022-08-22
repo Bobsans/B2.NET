@@ -1,7 +1,4 @@
-﻿using System;
-using System.Net.Http;
-using B2.Models;
-using Newtonsoft.Json;
+﻿using B2.Models;
 
 namespace B2.Http.RequestGenerators;
 
@@ -12,14 +9,10 @@ public static class FileDownloadRequestGenerators {
 		public const string DOWNLOAD_BY_NAME = "file";
 	}
 
-	public static HttpRequestMessage DownloadById(B2Options options, string fileId, string byteRange = "") {
-		HttpRequestMessage request = new() {
-			Method = HttpMethod.Post,
-			RequestUri = new Uri($"{options.DownloadUrl}/b2api/{Constants.Version}/{Endpoints.DOWNLOAD_BY_ID}"),
-			Content = new StringContent(JsonConvert.SerializeObject(new { fileId }))
-		};
-
-		request.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationToken);
+	public static HttpRequestMessage DownloadById(B2Options options, string fileId, string? byteRange = null) {
+		HttpRequestMessage request = BaseRequestGenerator.PostRequestJson(Endpoints.DOWNLOAD_BY_ID, new {
+			fileId
+		}, options);
 
 		// Add byte range header if we have it
 		if (!string.IsNullOrEmpty(byteRange)) {
@@ -29,7 +22,7 @@ public static class FileDownloadRequestGenerators {
 		return request;
 	}
 
-	public static HttpRequestMessage DownloadByName(B2Options options, string bucketName, string fileName, string byteRange = "") {
+	public static HttpRequestMessage DownloadByName(B2Options options, string bucketName, string fileName, string? byteRange = null) {
 		HttpRequestMessage request = new() {
 			Method = HttpMethod.Get,
 			RequestUri = new Uri($"{options.DownloadUrl}/{Endpoints.DOWNLOAD_BY_NAME}/{bucketName}/{fileName.B2UrlEncode()}")
@@ -45,25 +38,12 @@ public static class FileDownloadRequestGenerators {
 		return request;
 	}
 
-	public static HttpRequestMessage GetDownloadAuthorization(B2Options options, string fileNamePrefix, int validDurationInSeconds, string bucketId, string b2ContentDisposition = "") {
-		string body = "{\"bucketId\":" + JsonConvert.ToString(bucketId) + ", \"fileNamePrefix\":" +
-			JsonConvert.ToString(fileNamePrefix) + ", \"validDurationInSeconds\":" +
-			JsonConvert.ToString(validDurationInSeconds);
-		
-		if (!string.IsNullOrEmpty(b2ContentDisposition)) {
-			body += ", \"b2ContentDisposition\":" + JsonConvert.ToString(b2ContentDisposition);
-		}
-
-		body += "}";
-
-		HttpRequestMessage request = new() {
-			Method = HttpMethod.Post,
-			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{Endpoints.GET_DOWNLOAD_AUTHORIZATION}"),
-			Content = new StringContent(body)
-		};
-
-		request.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationToken);
-
-		return request;
+	public static HttpRequestMessage GetDownloadAuthorization(B2Options options, string fileNamePrefix, int validDurationInSeconds, string bucketId, string? b2ContentDisposition = null) {
+		return BaseRequestGenerator.PostRequestJson(Endpoints.GET_DOWNLOAD_AUTHORIZATION, new {
+			bucketId,
+			fileNamePrefix,
+			validDurationInSeconds,
+			b2ContentDisposition
+		}, options);
 	}
 }

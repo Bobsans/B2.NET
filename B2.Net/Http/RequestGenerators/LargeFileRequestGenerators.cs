@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using B2.Models;
-using Newtonsoft.Json;
+﻿using B2.Models;
 
 namespace B2.Http.RequestGenerators;
 
@@ -21,15 +15,11 @@ public static class LargeFileRequestGenerators {
 	}
 
 	public static HttpRequestMessage Start(B2Options options, string bucketId, string fileName, string? contentType = null, Dictionary<string, string>? fileInfo = null) {
-		string content = $"{{\"bucketId\":\"{bucketId}\",\"fileName\":\"{fileName}\",\"contentType\":\"{(string.IsNullOrEmpty(contentType) ? "b2/x-auto" : contentType)}\"}}";
-
-		HttpRequestMessage request = new() {
-			Method = HttpMethod.Post,
-			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{Endpoints.START}"),
-			Content = new StringContent(content)
-		};
-
-		request.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationToken);
+		HttpRequestMessage request = BaseRequestGenerator.PostRequestJson(Endpoints.START, new {
+			bucketId,
+			fileName,
+			contentType = string.IsNullOrEmpty(contentType) ? "b2/x-auto" : contentType
+		}, options);
 
 		// File Info headers
 		if (fileInfo is { Count: > 0 }) {
@@ -38,20 +28,12 @@ public static class LargeFileRequestGenerators {
 			}
 		}
 
-		request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-		request.Content.Headers.ContentLength = content.Length;
-
 		return request;
 	}
 
 	/// <summary>
 	/// Upload a file to B2. This method will calculate the SHA1 checksum before sending any data.
 	/// </summary>
-	/// <param name="options"></param>
-	/// <param name="fileData"></param>
-	/// <param name="partNumber"></param>
-	/// <param name="uploadPartUrl"></param>
-	/// <returns></returns>
 	public static HttpRequestMessage Upload(B2Options options, byte[] fileData, int partNumber, B2UploadPartUrl uploadPartUrl) {
 		if (partNumber is < 1 or > 10000) {
 			throw new Exception("Part number must be between 1 and 10,000");
@@ -64,7 +46,7 @@ public static class LargeFileRequestGenerators {
 		};
 
 		// Get the file checksum
-		string hash = Utilities.GetSha1Hash(fileData);
+		string hash = Utils.GetSha1Hash(fileData);
 
 		// Add headers
 		request.Headers.TryAddWithoutValidation("Authorization", uploadPartUrl.AuthorizationToken);
@@ -76,13 +58,16 @@ public static class LargeFileRequestGenerators {
 	}
 
 	public static HttpRequestMessage GetUploadPartUrl(B2Options options, string fileId) {
-		return BaseRequestGenerator.PostRequest(Endpoints.GET_PART_URL, JsonConvert.SerializeObject(new { fileId }), options);
+		return BaseRequestGenerator.PostRequestJson(Endpoints.GET_PART_URL, new {
+			fileId
+		}, options);
 	}
 
 	public static HttpRequestMessage Finish(B2Options options, string fileId, string[] partSha1Array) {
-		string content = JsonConvert.SerializeObject(new { fileId, partSha1Array });
-		HttpRequestMessage request = BaseRequestGenerator.PostRequestJson(Endpoints.FINISH, content, options);
-		return request;
+		return BaseRequestGenerator.PostRequestJson(Endpoints.FINISH, new {
+			fileId,
+			partSha1Array
+		}, options);
 	}
 
 	public static HttpRequestMessage ListParts(B2Options options, string fileId, int startPartNumber, int maxPartCount) {
@@ -90,61 +75,34 @@ public static class LargeFileRequestGenerators {
 			throw new Exception("Start part number must be between 1 and 10,000");
 		}
 
-		return BaseRequestGenerator.PostRequestJson(
-			Endpoints.LIST_PARTS,
-			JsonConvert.SerializeObject(new { fileId, startPartNumber, maxPartCount }),
-			options
-		);
+		return BaseRequestGenerator.PostRequestJson(Endpoints.LIST_PARTS, new {
+			fileId,
+			startPartNumber,
+			maxPartCount
+		}, options);
 	}
+
 
 	public static HttpRequestMessage Cancel(B2Options options, string fileId) {
-		return BaseRequestGenerator.PostRequestJson(
-			Endpoints.CANCEL,
-			JsonConvert.SerializeObject(new { fileId }),
-			options
-		);
+		return BaseRequestGenerator.PostRequestJson(Endpoints.CANCEL, new {
+			fileId
+		}, options);
 	}
 
-	public static HttpRequestMessage IncompleteFiles(B2Options options, string bucketId, string startFileId = "", string maxFileCount = "") {
-		string body = "{\"bucketId\":\"" + bucketId + "\"";
-
-		if (!string.IsNullOrEmpty(startFileId)) {
-			body += ", \"startFileId\":" + JsonConvert.ToString(startFileId);
-		}
-
-		if (!string.IsNullOrEmpty(maxFileCount)) {
-			body += ", \"maxFileCount\":" + JsonConvert.ToString(maxFileCount);
-		}
-
-		body += "}";
-
-		return BaseRequestGenerator.PostRequestJson(Endpoints.INCOMPLETE_FILES, body, options);
+	public static HttpRequestMessage IncompleteFiles(B2Options options, string bucketId, string? startFileId = null, int? maxFileCount = null) {
+		return BaseRequestGenerator.PostRequestJson(Endpoints.INCOMPLETE_FILES, new {
+			bucketId,
+			startFileId,
+			maxFileCount
+		}, options);
 	}
 
-	public static HttpRequestMessage CopyPart(B2Options options, string sourceFileId, string destinationLargeFileId, int destinationPartNumber, string range = "") {
-		Dictionary<string, string> payload = new() {
-			{ "sourceFileId", sourceFileId },
-			{ "largeFileId", destinationLargeFileId },
-			{ "partNumber", destinationPartNumber.ToString() },
-		};
-
-		if (!string.IsNullOrWhiteSpace(range)) {
-			payload.Add("range", range);
-		}
-
-		string content = JsonConvert.SerializeObject(payload);
-
-		HttpRequestMessage request = new() {
-			Method = HttpMethod.Post,
-			RequestUri = new Uri($"{options.ApiUrl}/b2api/{Constants.Version}/{Endpoints.COPY_PART}"),
-			Content = new StringContent(content),
-		};
-
-		request.Headers.TryAddWithoutValidation("Authorization", options.AuthorizationToken);
-
-		request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-		request.Content.Headers.ContentLength = content.Length;
-
-		return request;
+	public static HttpRequestMessage CopyPart(B2Options options, string sourceFileId, string largeFileId, int partNumber, string? range = null) {
+		return BaseRequestGenerator.PostRequestJson(Endpoints.COPY_PART, new {
+			sourceFileId,
+			largeFileId,
+			partNumber,
+			range
+		}, options);
 	}
 }

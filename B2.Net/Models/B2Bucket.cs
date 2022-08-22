@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace B2.Models;
+﻿namespace B2.Models;
 
 public class B2Bucket {
 	public string BucketId { get; set; } = null!;
@@ -8,7 +6,7 @@ public class B2Bucket {
 	public string BucketType { get; set; } = null!;
 	public Dictionary<string, string> BucketInfo { get; set; } = null!;
 	public List<B2BucketLifecycleRule> LifecycleRules { get; set; } = null!;
-	public List<B2CorsRule> CORSRules { get; set; } = null!;
+	public List<B2CorsRule> CorsRules { get; set; } = null!;
 	public int Revision { get; set; }
 }
 
