@@ -4,7 +4,7 @@ using B2.Models;
 
 namespace B2;
 
-public class LargeFiles : ILargeFiles {
+public class LargeFiles {
 	const string API = "Large Files";
 
 	readonly B2Options _options;

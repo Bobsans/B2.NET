@@ -5,120 +5,72 @@ using B2.Models;
 
 namespace B2;
 
-public class B2Client : IB2Client {
-	B2Options options;
-	B2Capabilities capabilities = null!;
+public class B2Client {
+	readonly B2Options _options;
+
+	public Buckets Buckets { get; private set; }
+	public Files Files { get; private set; }
+	public LargeFiles LargeFiles { get; private set; }
 
 	public B2Capabilities Capabilities {
 		get {
-			if (options.Authenticated) {
-				return capabilities;
+			if (_options.Authenticated) {
+				return _options.Capabilities;
 			}
 
-			throw new NotAuthorizedException("You attempted to load the capabilities of this key before authenticating with Backblaze. You must Authorize before you can access Capabilities.");
+			throw new NotAuthorizedException(
+				"You attempted to load the capabilities of this key before authenticating with Backblaze. " +
+				"You must Authorize before you can access Capabilities."
+			);
 		}
 	}
 
-	/// <summary>
-	/// If you specify authorizeOnInitialize = false, you MUST call Initialize() once before you use the client.
-	/// </summary>
-	/// <param name="options"></param>
-	/// <param name="authorizeOnInitialize"></param>
-	public B2Client(B2Options options, bool authorizeOnInitialize = true) {
-		// Should we authorize on the class initialization?
-		if (authorizeOnInitialize) {
-			this.options = Authorize(options);
-			Buckets = new Buckets(options);
-			Files = new Files(options);
-			LargeFiles = new LargeFiles(options);
-			capabilities = options.Capabilities;
-		} else {
-			// If not, then the user will have to Initialize() before making any calls.
-			this.options = options;
-		}
-	}
+	public B2Client(B2Options options) {
+		_options = options;
 
-	/// <summary>
-	/// Simple method for instantiating the B2Client. Does auth for you. See https://www.backblaze.com/b2/docs/application_keys.html for details on application keys.
-	/// This method defaults to not persisting a bucket. Manually build the options object if you wish to do that.
-	/// </summary>
-	public B2Client(string keyId, string applicationKey, int requestTimeout = 100) {
-		options = new B2Options {
-			KeyId = keyId,
-			ApplicationKey = applicationKey,
-			RequestTimeout = requestTimeout
-		};
-		options = Authorize(options);
+		if (options.AutomaticAuth) {
+			Authorize();
+		}
 
 		Buckets = new Buckets(options);
 		Files = new Files(options);
 		LargeFiles = new LargeFiles(options);
-		capabilities = options.Capabilities;
-	}
-	
-	public IBuckets Buckets { get; private set; } = null!;
-	public IFiles Files { get; private set; } = null!;
-	public ILargeFiles LargeFiles { get; private set; } = null!;
-
-	/// <summary>
-	/// Only call this method if you created a B2Client with authorizeOnInitialize = false. This method of using B2.NET is considered in Beta, as it has not been extensively tested.
-	/// </summary>
-	public void Initialize() {
-		options = Authorize(options);
-		Buckets = new Buckets(options);
-		Files = new Files(options);
-		LargeFiles = new LargeFiles(options);
-		capabilities = options.Capabilities;
 	}
 
-	/// <summary>
-	/// Authorize against the B2 storage service. Requires that KeyId and ApplicationKey on the options object be set.
-	/// </summary>
-	/// <returns>B2Options containing the download url, new api url, AccountID and authorization token.</returns>
-	public async Task<B2Options> Authorize(CancellationToken cancelToken = default) {
-		return await AuthorizeAsync(options);
-	}
+	public B2Client(string keyId, string applicationKey, int requestTimeout = 100) : this(new B2Options {
+		KeyId = keyId,
+		ApplicationKey = applicationKey,
+		RequestTimeout = requestTimeout
+	}) {}
 
-	public static async Task<B2Options> AuthorizeAsync(string keyId, string applicationKey) {
-		return await AuthorizeAsync(new B2Options { ApplicationKey = applicationKey, KeyId = keyId });
-	}
+	public B2Client Authorize() => AuthorizeAsync().Result;
 
-	public static B2Options Authorize(string keyId, string applicationKey) {
-		return Authorize(new B2Options { ApplicationKey = applicationKey, KeyId = keyId });
-	}
-
-	/// <summary>
-	/// Requires that KeyId and ApplicationKey on the options object be set. If you are using an application key you must specify the accountId, the keyId, and the applicationKey.
-	/// </summary>
-	public static async Task<B2Options> AuthorizeAsync(B2Options options) {
-		// Return if already authenticated.
-		if (options.Authenticated) {
-			return options;
+	public async Task<B2Client> AuthorizeAsync(CancellationToken cancellationToken = default) {
+		if (_options.Authenticated) {
+			return this;
 		}
 
-		if (options.KeyId == null || options.ApplicationKey == null) {
+		if (_options.KeyId == null || _options.ApplicationKey == null) {
 			throw new AuthorizationException("Either KeyId or ApplicationKey were not specified.");
 		}
 
-		HttpClient client = HttpClientFactory.CreateHttpClient(options.RequestTimeout);
-		HttpResponseMessage response = await client.SendAsync(AuthRequestGenerator.Authorize(options));
+		HttpClient client = HttpClientFactory.CreateHttpClient(_options.RequestTimeout);
+		HttpResponseMessage response = await client.SendAsync(AuthRequestGenerator.Authorize(_options), cancellationToken);
 
-		string jsonResponse = await response.Content.ReadAsStringAsync();
+		string json = await response.Content.ReadAsStringAsync(cancellationToken);
 
 		if (response.IsSuccessStatusCode) {
-			options.SetState(Utils.Deserialize<B2AuthResponse>(jsonResponse)!);
+			_options.SetState(Utils.Deserialize<B2AuthResponse>(json)!);
 		} else if (response.StatusCode == HttpStatusCode.Unauthorized) {
-			// Return a better exception because of confusing Keys api.
-			throw new AuthorizationException("If you are using an Application key and not a Master key, make sure that you are supplying the Key ID and Key Value for that Application Key. Do not mix your Account ID with your Application Key.");
+			throw new AuthorizationException(
+				"If you are using an Application key and not a Master key, make sure that you are " +
+				"supplying the Key ID and Key Value for that Application Key. " +
+				"Do not mix your Account ID with your Application Key."
+			);
 		} else {
-			throw new AuthorizationException(jsonResponse);
+			throw new AuthorizationException(json);
 		}
 
-		return options;
+		return this;
 	}
-
-	/// <summary>
-	/// Requires that KeyId and ApplicationKey on the options object be set. If you are using an application key you must specify the accountId, the keyId, and the applicationKey.
-	/// </summary>
-	public static B2Options Authorize(B2Options options) => AuthorizeAsync(options).Result;
 }

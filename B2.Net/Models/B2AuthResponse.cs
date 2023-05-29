@@ -1,5 +1,6 @@
 ﻿namespace B2.Models;
 
+[Serializable]
 public class B2AuthResponse {
 	public string AccountId { get; set; } = null!;
 	public string ApiUrl { get; set; } = null!;
@@ -15,6 +16,7 @@ public class B2AuthResponse {
 	public B2AuthCapabilities Allowed { get; set; } = null!;
 }
 
+[Serializable]
 public class B2AuthCapabilities {
 	public string BucketId { get; set; } = null!;
 	public string BucketName { get; set; } = null!;

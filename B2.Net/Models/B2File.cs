@@ -1,5 +1,6 @@
 ﻿namespace B2.Models;
 
+[Serializable]
 public class B2File {
 	public string FileId { get; set; } = null!;
 	public string FileName { get; set; } = null!;

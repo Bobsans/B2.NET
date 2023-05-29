@@ -1,5 +1,6 @@
 ﻿namespace B2.Models;
 
+[Serializable]
 public class B2Options {
 	public string AccountId { get; private set; } = null!;
 	public string KeyId { get; set; } = null!;
@@ -29,6 +30,7 @@ public class B2Options {
 
 	public int RequestTimeout { get; set; }
 
+	public bool AutomaticAuth { get; set; } = true;
 	public bool Authenticated { get; private set; }
 
 	public B2Options() {

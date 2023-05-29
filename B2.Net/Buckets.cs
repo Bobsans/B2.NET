@@ -4,7 +4,7 @@ using B2.Models;
 
 namespace B2;
 
-public class Buckets : IBuckets {
+public class Buckets {
 	const string API = "Buckets";
 
 	readonly B2Options _options;
@@ -27,7 +27,7 @@ public class Buckets : IBuckets {
 	/// Creates a new bucket. A bucket belongs to the account used to create it. If BucketType is not set allPrivate will be used by default.
 	/// </summary>
 	public async Task<B2Bucket> Create(string bucketName, BucketType bucketType, CancellationToken cancelToken = default) {
-		HttpRequestMessage request = BucketRequestGenerators.CreateBucket(_options, bucketName, bucketType.ToString());
+		HttpRequestMessage request = BucketRequestGenerators.CreateBucket(_options, bucketName, bucketType);
 		HttpResponseMessage response = await _client.SendAsync(request, cancelToken);
 
 		return await ResponseParser.ParseResponse<B2Bucket>(response, API);
@@ -62,7 +62,7 @@ public class Buckets : IBuckets {
 	public async Task<B2Bucket> Update(BucketType bucketType, string? bucketId = null, CancellationToken cancelToken = default) {
 		string operationalBucketId = Utils.DetermineBucketId(_options, bucketId);
 
-		HttpRequestMessage request = BucketRequestGenerators.UpdateBucket(_options, operationalBucketId, bucketType.ToString());
+		HttpRequestMessage request = BucketRequestGenerators.UpdateBucket(_options, operationalBucketId, bucketType);
 		HttpResponseMessage response = await _client.SendAsync(request, cancelToken);
 
 		return await ResponseParser.ParseResponse<B2Bucket>(response, API);

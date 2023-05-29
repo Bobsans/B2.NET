@@ -1,63 +1,42 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
+using System.Threading.Tasks;
 using B2.Models;
 
 namespace B2.Test;
 
 public class PublicFileTests : BaseTest {
-	B2Bucket testBucket = new();
-	B2Client client;
-	readonly List<B2File> filesToDelete = new();
-	const string BUCKET_NAME = "B2NETTestingBucketPublic";
+	B2Client _client = null!;
 
-	static string FilePath => Path.Combine(System.AppContext.BaseDirectory, "../../../");
-
+	const string TEST_FILE_NAME = "B2Test.txt";
+	
+	static byte[] ReadTestFileBytes() => File.ReadAllBytes(Path.Join("files", TEST_FILE_NAME));
+	
 	[OneTimeSetUp]
 	public void Setup() {
-		client = new B2Client(Options);
-		Options = client.Authorize().Result;
-
-		List<B2Bucket> buckets = client.Buckets.GetList().Result;
-		B2Bucket existingBucket = null;
-
-		foreach (B2Bucket b2Bucket in buckets.Where(b2Bucket => b2Bucket.BucketName == BUCKET_NAME)) {
-			existingBucket = b2Bucket;
-		}
-
-		testBucket = existingBucket ?? client.Buckets.Create(BUCKET_NAME, BucketType.allPublic).Result;
+		_client = new B2Client(DefaultOptions);
 	}
 
 	[Test]
-	public void FileGetFriendlyUrlTest() {
-		const string fileName = "B2Test.txt";
-		byte[] fileData = File.ReadAllBytes(Path.Combine(FilePath, fileName));
-		string hash = Utils.GetSha1Hash(fileData);
-		B2File file = client.Files.Upload(fileData, fileName, testBucket.BucketId).Result;
-		// Clean up.
-		filesToDelete.Add(file);
+	public async Task FileGetFriendlyUrlTest() {
+		B2Bucket bucket = await CreateBucket(isPublic: true);
+
+		byte[] content = ReadTestFileBytes();
+		string hash = Utils.GetSha1Hash(content);
+		B2File file = await _client.Files.Upload(content, TEST_FILE_NAME, bucket.BucketId);
 
 		Assert.That(file.ContentSha1, Is.EqualTo(hash), "File hashes did not match.");
 
 		// Get url
-		string friendlyUrl = client.Files.GetFriendlyDownloadUrl(fileName, testBucket.BucketName);
+		string friendlyUrl = _client.Files.GetFriendlyDownloadUrl(file.FileName, bucket.BucketName);
 
 		// Test download
 		HttpClient client2 = new();
-		HttpResponseMessage friendFile = client2.GetAsync(friendlyUrl).Result;
-		byte[] fileData2 = friendFile.Content.ReadAsByteArrayAsync().Result;
+		HttpResponseMessage friendFile = await client2.GetAsync(friendlyUrl);
+		byte[] fileData2 = await friendFile.Content.ReadAsByteArrayAsync();
 		string downloadHash = Utils.GetSha1Hash(fileData2);
 
 		Assert.That(downloadHash, Is.EqualTo(hash));
-	}
-
-	[OneTimeTearDown]
-	public void Cleanup() {
-		foreach (B2File b2File in filesToDelete) {
-			_ = client.Files.Delete(b2File.FileId, b2File.FileName).Result;
-		}
-
-		_ = client.Buckets.Delete(testBucket.BucketId).Result;
 	}
 }

@@ -5,7 +5,7 @@ using B2.Models;
 
 namespace B2;
 
-public class Files : IFiles {
+public class Files {
 	const string API = "Files";
 
 	readonly B2Options _options;

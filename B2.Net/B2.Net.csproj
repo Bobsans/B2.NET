@@ -1,12 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<FileVersion>0.7.4.7</FileVersion>
-		<AssemblyVersion>0.7.4.7</AssemblyVersion>
-		<PackageVersion>0.7.4.7</PackageVersion>
+		<FileVersion>0.7.4.8</FileVersion>
+		<AssemblyVersion>0.7.4.8</AssemblyVersion>
+		<PackageVersion>0.7.4.8</PackageVersion>
 		<Title>B2.Net</Title>
 		<Authors>Westropp Ventures</Authors>
 		<Copyright>Bobsans</Copyright>
@@ -18,6 +17,8 @@
 		<PackageTags>B2 Backblaze Cloud Storage</PackageTags>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<RootNamespace>B2</RootNamespace>
+		<LangVersion>default</LangVersion>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 </Project>

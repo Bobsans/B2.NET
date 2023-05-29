@@ -18,11 +18,19 @@ public static class Utils {
 	/// Create the B2 Authorization header. Base64 encoded accountId:applicationKey.
 	/// </summary>
 	public static string CreateAuthorizationHeader(string accountId, string applicationKey) {
-		return $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes(accountId + ":" + applicationKey))}";
+		return $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes($"{accountId}:{applicationKey}"))}";
 	}
 
 	public static string Serialize<T>(T obj) => JsonSerializer.Serialize(obj, _jsonOptions);
 	public static T? Deserialize<T>(string json) where T : new() => JsonSerializer.Deserialize<T>(json, _jsonOptions);
+
+	public static string GetStringValue(this BucketType type) {
+		return type switch {
+			BucketType.AllPrivate => "allPrivate",
+			BucketType.AllPublic => "allPublic",
+			_ => throw new Exception($"Invalid bucket type: {type}")
+		};
+	}
 
 	public static async Task CheckForErrors(HttpResponseMessage response, string? callingApi = null) {
 		if (!response.IsSuccessStatusCode) {
@@ -52,8 +60,7 @@ public static class Utils {
 	}
 
 	public static string GetSha1Hash(byte[] fileData) {
-		using SHA1 sha1 = SHA1.Create();
-		return BitConverter.ToString(sha1.ComputeHash(fileData)).Replace("-", "").ToLowerInvariant();
+		return BitConverter.ToString(SHA1.HashData(fileData)).Replace("-", "").ToLowerInvariant();
 	}
 
 	public static string DetermineBucketId(B2Options options, string? bucketId) {
@@ -66,6 +73,7 @@ public static class Utils {
 		return options.PersistBucket ? options.BucketId : bucketId!;
 	}
 
+	[Serializable]
 	class B2Error {
 		public int Status { get; set; }
 		public string Code { get; set; } = null!;

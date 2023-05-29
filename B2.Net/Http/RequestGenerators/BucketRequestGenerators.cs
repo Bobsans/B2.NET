@@ -24,7 +24,7 @@ public static class BucketRequestGenerators {
 	/// <summary>
 	/// Create a bucket. Defaults to allPrivate.
 	/// </summary>
-	public static HttpRequestMessage CreateBucket(B2Options options, string bucketName, string bucketType = "allPrivate") {
+	public static HttpRequestMessage CreateBucket(B2Options options, string bucketName, BucketType bucketType = BucketType.AllPrivate) {
 		Regex allowed = new("^[a-zA-Z0-9-]+$");
 		if (bucketName.Length is < 6 or > 50 || !allowed.IsMatch(bucketName) || bucketName.StartsWith("b2-")) {
 			throw new Exception(
@@ -34,7 +34,7 @@ public static class BucketRequestGenerators {
 			);
 		}
 
-		string json = Utils.Serialize(new { accountId = options.AccountId, bucketName, bucketType });
+		string json = Utils.Serialize(new { accountId = options.AccountId, bucketName, bucketType = bucketType.GetStringValue() });
 		return BaseRequestGenerator.PostRequest(Endpoints.CREATE, json, options);
 	}
 
@@ -96,8 +96,8 @@ public static class BucketRequestGenerators {
 	/// <summary>
 	/// Used to modify the bucket type of the provided bucket.
 	/// </summary>
-	public static HttpRequestMessage UpdateBucket(B2Options options, string bucketId, string bucketType) {
-		string json = Utils.Serialize(new { accountId = options.AccountId, bucketId, bucketType });
+	public static HttpRequestMessage UpdateBucket(B2Options options, string bucketId, BucketType bucketType) {
+		string json = Utils.Serialize(new { accountId = options.AccountId, bucketId, bucketType = bucketType.GetStringValue() });
 		return BaseRequestGenerator.PostRequest(Endpoints.UPDATE, json, options);
 	}
 
